@@ -2,6 +2,7 @@
 A simple Python tool to convert spike trains to calcium fluorescence-like traces.
 
 ---
+
 ### Files
 - [`spikes2calcium.py`](spikes2calcium.py) - the main function to convert spike trains to calcium-like traces using the method described in [Grewe et. al. 2010](https://www.nature.com/articles/nmeth.1453) (codebase in MATLAB: [github.com/HelmchenLab/CalciumSim](https://github.com/HelmchenLab/CalciumSim)).
 - [`utils.py`](utils.py) - including plotting code and spike train generation code for demo purposes.
