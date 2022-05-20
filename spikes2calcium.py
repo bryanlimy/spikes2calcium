@@ -4,22 +4,24 @@ import numpy as np
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
-def _time2calcium(spike_time: float, duration: float, frame_rate: int,
-                  tau_onset: float, amp1: float, tau1: float, amp2: float,
-                  tau2: float):
+def _times2calcium(spike_times: np.ndarray, duration: float, frame_rate: float,
+                   tau_onset: float, amp1: float, tau1: float, amp2: float,
+                   tau2: float):
   """ Convert spike time to calcium signal
   Reference: https://github.com/HelmchenLab/CalciumSim/blob/master/modelCalcium/etc/spkTimes2Calcium.m
   Args:
-    spike_time: float, spike time in second
+    spike_times: np.ndarray, 1D array of spike times in second
     duration: int, duration of the trial in second
     frame_rate: float, the frame rate of the recordings
   """
+  if len(spike_times.shape) == 1:
+    spike_times = np.expand_dims(spike_times, axis=-1)
   tau = np.arange(start=0, stop=duration, step=1 / frame_rate)
-  diff = -(tau - spike_time)
+  diff = -(tau - spike_times)
   trace = np.multiply(1 - np.exp(diff / tau_onset),
                       amp1 * np.exp(diff / tau1) + amp2 * np.exp(diff / tau2))
-  trace = np.nan_to_num(np.where(tau < spike_time, 0, trace))
-  return trace
+  trace = np.nan_to_num(np.where(tau < spike_times, 0, trace))
+  return np.sum(trace, axis=0)
 
 
 def spikes2calcium(spike_trains: np.ndarray,
@@ -45,18 +47,17 @@ def spikes2calcium(spike_trains: np.ndarray,
   """
   assert len(spike_trains.shape) == 2, \
     f'spike_trains should have format (num. neurons, time-steps)'
-  traces = np.zeros(shape=(spike_trains.shape), dtype=np.float32)
+  traces = np.zeros(shape=spike_trains.shape, dtype=np.float32)
   for i in range(spike_trains.shape[0]):
     spike_times = np.nonzero(spike_trains[i])[0] / frame_rate
-    for spike_time in spike_times:
-      traces[i] += _time2calcium(spike_time=spike_time,
-                                 duration=spike_trains.shape[1] / frame_rate,
-                                 frame_rate=frame_rate,
-                                 tau_onset=tau_onset,
-                                 amp1=amp1,
-                                 tau1=tau1,
-                                 amp2=amp2,
-                                 tau2=tau2)
+    traces[i] = _times2calcium(spike_times=spike_times,
+                               duration=spike_trains.shape[1] / frame_rate,
+                               frame_rate=frame_rate,
+                               tau_onset=tau_onset,
+                               amp1=amp1,
+                               tau1=tau1,
+                               amp2=amp2,
+                               tau2=tau2)
   # add noise to signals
   peak = amp1 * ((tau1 / tau_onset) * np.power(
       (tau1 / tau_onset) + 1, -((tau_onset / tau1) + 1)))

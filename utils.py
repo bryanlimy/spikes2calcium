@@ -10,9 +10,9 @@ if platform.system() == 'Darwin':
   matplotlib.use('TkAgg')
 
 
-def generate_spike_trains(firing_rate: float, duration: int, num_neuorns: int,
+def generate_spike_trains(firing_rate: float, duration: int, num_neurons: int,
                           frame_rate: float) -> np.ndarray:
-  spike_trains = np.random.rand(num_neuorns, ceil(duration * frame_rate))
+  spike_trains = np.random.rand(num_neurons, ceil(duration * frame_rate))
   spike_trains = spike_trains < (firing_rate / frame_rate)
   return spike_trains.astype(np.float32)
 
